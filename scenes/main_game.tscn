@@ -1,0 +1,151 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://sprites/bg.png" type="Texture" id=1]
+[ext_resource path="res://sprites/bg_score.png" type="Texture" id=2]
+[ext_resource path="res://scenes/bee.tscn" type="PackedScene" id=3]
+[ext_resource path="res://icon.png" type="Texture" id=4]
+[ext_resource path="res://sprites/flower.png" type="Texture" id=5]
+[ext_resource path="res://fonts/THEBOLDFONT 2022.otf" type="DynamicFontData" id=6]
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends Node
+var score = 0
+var vidas = 3
+
+var aranha = preload(\"res://scenes/aranha.tscn\")
+var flor = preload(\"res://scenes/flor.tscn\")
+
+
+
+func _on_bee_area_entered(area): #quando algo entra na area da abelha
+	if area.name == \"aranha\":
+		lifes()
+
+	if area.name == \"flor\":
+		score()
+		area.queue_free()
+
+
+func score():
+	score += 1
+	$Control/score.text = str(score)
+
+
+func lifes(): # funcionamento das vidas do jogo
+	vidas -= 1
+	if vidas == 2:
+		$sprites/bg_score/beelife3.hide()
+	elif vidas == 1:
+		$sprites/bg_score/beelife2.hide()
+	elif vidas == 0 :
+		get_tree().change_scene(\"res://scenes/game_over.tscn\")
+
+
+func _on_timer_timeout():
+	aranha_spaw()
+
+
+func _on_timer_flor_timeout():
+	flor_spaw()
+	
+	
+func aranha_spaw():
+	var new_aranha = aranha.instance()
+	new_aranha.position.x = rand_range(0,360)
+	new_aranha.position.y = -20
+	$sprites/bg.add_child(new_aranha)
+	
+	
+	
+	
+func flor_spaw():
+	var new_flor =flor.instance()
+	new_flor.position.x = rand_range(0,360)
+	new_flor.position.y = -20
+	$sprites/bg.add_child(new_flor)
+	
+	
+	
+	
+	
+	
+	
+	
+"
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Area2D
+
+
+func _ready():
+	pass
+
+func _process(delta):
+	
+	var x = get_global_mouse_position().x - position.x
+	var y = get_global_mouse_position().y - position.y
+	
+	translate(Vector2(x,y))
+"
+
+[sub_resource type="DynamicFont" id=3]
+size = 41
+font_data = ExtResource( 6 )
+
+[node name="main_game" type="Node"]
+script = SubResource( 2 )
+
+[node name="sprites" type="Node2D" parent="."]
+
+[node name="bg" type="Sprite" parent="sprites"]
+texture = ExtResource( 1 )
+centered = false
+
+[node name="bg_score" type="Sprite" parent="sprites"]
+texture = ExtResource( 2 )
+centered = false
+
+[node name="beelife" type="Sprite" parent="sprites/bg_score"]
+position = Vector2( 37, 29 )
+texture = ExtResource( 4 )
+
+[node name="beelife2" type="Sprite" parent="sprites/bg_score"]
+position = Vector2( 87, 29 )
+texture = ExtResource( 4 )
+
+[node name="beelife3" type="Sprite" parent="sprites/bg_score"]
+position = Vector2( 136, 29 )
+texture = ExtResource( 4 )
+
+[node name="bee" parent="." instance=ExtResource( 3 )]
+script = SubResource( 1 )
+
+[node name="Control" type="Control" parent="."]
+margin_right = 40.0
+margin_bottom = 40.0
+
+[node name="score" type="Label" parent="Control"]
+margin_left = 244.0
+margin_top = 2.0
+margin_right = 359.0
+margin_bottom = 94.0
+custom_fonts/font = SubResource( 3 )
+text = "0"
+align = 1
+valign = 1
+
+[node name="Sprite" type="Sprite" parent="Control"]
+position = Vector2( 232, 34 )
+texture = ExtResource( 5 )
+
+[node name="timer" type="Timer" parent="."]
+wait_time = 3.0
+autostart = true
+
+[node name="timer_flor" type="Timer" parent="."]
+wait_time = 4.0
+autostart = true
+
+[connection signal="area_entered" from="bee" to="." method="_on_bee_area_entered"]
+[connection signal="timeout" from="timer" to="." method="_on_timer_timeout"]
+[connection signal="timeout" from="timer_flor" to="." method="_on_timer_flor_timeout"]
